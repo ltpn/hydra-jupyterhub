@@ -34,8 +34,8 @@ Manifest is retained inside the image, not committed to this repository.
 ## Julia kernel and CPU targeting
 
 Select **Julia (Hydra)**, kernel ID `julia-hydra`. The exact displayed Julia
-version follows the base. Its kernelspec uses `/usr/local/bin/julia`, explicitly
-activates the current default global environment, and lives under
+version follows the base. Its kernelspec uses `/usr/local/bin/julia`, preserves
+IJulia's normal `--project=@.` project discovery, and lives under
 `/opt/conda/share/jupyter/kernels`, outside the notebook home PVC.
 The current-version `julia-<major>.<minor>` kernel is also registered.
 The stable `julia-hydra` ID is preferable in saved notebooks across Julia updates.
@@ -60,8 +60,8 @@ An arm64 laptop needs amd64 emulation; CI uses native amd64 Ubuntu runners.
 Before publication, the build runs:
 
 - Python and Julia kernels through the Jupyter messaging protocol.
-- Julia execution/imports in a fresh directory and a directory whose local
-  Manifest points to an unavailable IJulia tree (the observed crash scenario).
+- Julia execution/imports in a fresh directory and project discovery in a
+  directory containing an empty local Project.
 - A repeat with a mounted notebook home, ensuring the system kernelspec remains
   available when a PVC hides the image's home directory.
 - Installation of a tiny local test extension and user settings, followed by
@@ -162,13 +162,11 @@ context has not been reproduced and should be revisited after image testing.
 Plain terminal Julia selects the global environment, and VS Code/terminal Julia
 startup does not necessarily import IJulia at all.
 
-The new kernels explicitly use the populated global `@v<major>.<minor>` project
-for startup, matching the user's desired default-environment approach. The smoke
-test includes a local Project/Manifest with an unavailable IJulia tree and checks
-that startup still succeeds. Users can explicitly `Pkg.activate` another project
-after the kernel starts. A truly project-specific IJulia kernel requires that
-project's dependencies to be instantiated; the global default is not a substitute
-for instantiating an explicitly activated project.
+The user confirmed that creating a notebook outside the tutorial folder solves
+the problem and asked to leave it aside. The new image therefore keeps normal
+IJulia `--project=@.` behavior: outside a local project, it uses the installed
+global environment; inside one, that project's dependencies must be instantiated.
+No global-project workaround is applied to hide an uninstantiated local Manifest.
 
 Only logs and relevant dependency/kernel metadata were inspected on Hydra. No
 user files, running notebooks, source repository, or deployment were modified.

@@ -24,7 +24,7 @@ ENV["IJULIA_NODEFAULTKERNEL"] = "1"
 Pkg.build("IJulia")
 using IJulia
 for specname in ("julia-hydra", "julia-$(VERSION.major).$(VERSION.minor)")
-    IJulia.installkernel("Julia Hydra", "--startup-file=no", "--project=@$(version_name)";
+    IJulia.installkernel("Julia Hydra", "--project=@.";
         julia=Cmd(["/usr/local/bin/julia"]), specname,
         displayname="Julia $(VERSION) (Hydra)")
 end

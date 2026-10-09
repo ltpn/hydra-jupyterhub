@@ -131,3 +131,8 @@ work as implementation progresses. Never mark unverified work complete.
   global IJulia from /home/jovyan and returns nothing from the tutorial directory.
   Home-level Untitled notebook has no recorded kernelspec. Further live
   diagnostics are stopped per user's request; no live kernel was started.
+- User subsequently confirmed that a notebook outside the tutorial folder works
+  and agreed this is project/environment drift rather than a container bug.
+  Superseding the earlier workaround decision, retain normal IJulia `--project=@.`
+  discovery in regenerated stable/system kernels. Tests cover global startup
+  and local project discovery, not masking an uninstantiated user Manifest.

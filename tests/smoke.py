@@ -46,7 +46,7 @@ assert metadata["python"]["packages"].get("jupyter-vscode-proxy")
 assert metadata["python"]["packages"].get("jupyter-pluto-proxy")
 spec = KernelSpecManager().get_kernel_spec("julia-hydra")
 assert spec.argv[0] == "/usr/local/bin/julia", spec.argv
-assert "--project=@v" in " ".join(spec.argv), spec.argv
+assert "--project=@." in spec.argv, spec.argv
 assert spec.resource_dir.startswith("/opt/conda/share/jupyter/kernels/"), spec.resource_dir
 assert not Path("/opt/conda/envs/Qiskit").exists()
 assert os.environ["CODE_EXTENSIONSDIR"] == "/home/jovyan/.local/share/code-server/extensions"
@@ -73,16 +73,11 @@ with tempfile.TemporaryDirectory() as directory:
         println("JULIA_KERNEL_OK ", VERSION, " ", Base.active_project())
     '''
     execute("julia-hydra", code, cwd)
-    # Regression for the observed crash: a local project records an IJulia tree
-    # that is not installed, while the image's global IJulia is installed.
-    (cwd / "Project.toml").write_text('[deps]\nIJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"\n')
-    (cwd / "Manifest.toml").write_text('''manifest_format = "2.0"
-[[deps.IJulia]]
-uuid = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
-version = "1.0.0"
-git-tree-sha1 = "0000000000000000000000000000000000000000"
-''')
-    execute("julia-hydra", code, cwd)
+    # Preserve normal IJulia project discovery: an empty local project can use
+    # installed global IJulia; a project with its own deps must be instantiated.
+    (cwd / "Project.toml").write_text("[deps]\n")
+    local_code = '@assert Base.active_project() == joinpath(pwd(), "Project.toml"); @assert 1+1 == 2; println("LOCAL_PROJECT_KERNEL_OK")'
+    execute("julia-hydra", local_code, cwd)
 
 # CPU-only package loading is a separate check from hardware GPU execution.
 subprocess.run(["julia", "--startup-file=no", "-e",
