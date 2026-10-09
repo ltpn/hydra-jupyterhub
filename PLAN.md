@@ -100,8 +100,8 @@
 - [x] Local shell/YAML syntax and metadata tag unit tests pass.
 - [x] New public GitHub repository created; initial plan pushed on main.
 - [x] Implementation pushed; native notebook CI successful.
-- [ ] Native amd64 build/test/publication successful.
-- [ ] Registry metadata, tags, and final image pull verified.
+- [x] Native amd64 combined build/test/publication successful.
+- [x] Registry metadata, all 34 tags, and final full image pull verified.
 
 Update this file with decisions, commands/results, failures, and outstanding
 work as implementation progresses. Never mark unverified work complete.
@@ -172,7 +172,7 @@ work as implementation progresses. Never mark unverified work complete.
 - Record MATLAB release and image provenance in final runtime metadata/tags.
   Structural checks can run without a license; licensed execution must not be
   claimed from a kernelspec/import check. No Hydra deployment change authorized.
-- [ ] MATLAB integration layer built/tested with LTPN's R2026b installation.
+- [x] MATLAB integration layer built/tested with LTPN's R2026b installation.
 - User clarified the deep-learning variant. Confirmed the actual customized
   Dockerfile is `alternates/building-on-matlab-docker-image/Dockerfile`; it uses
   `mathworks/matlab-deep-learning` and adds Symbolic Math Toolbox and ResNet-50.
@@ -283,3 +283,38 @@ work as implementation progresses. Never mark unverified work complete.
   Installed MATLAB version 26.2.0.3386108; 24 product/support-package catalog
   entries. Two recreated containers share a disposable home; the token stays
   read-only/local and is never passed to public CI or embedded in the image.
+
+## Final native publication
+
+- Native combined run 37960361376 on fb1400b SUCCEEDED. Fresh Julia resolution,
+  both real kernel/import smoke checks (including after MATLAB/PVC), both MATLAB
+  proxy/kernelspec/home checks, and actual VS Code extension/settings persistence
+  all passed before publication. No MATLAB token was used in GitHub Actions.
+- Published Linux amd64 digest:
+  `sha256:56c07d37d0ceedb66f10862ef091adf7c2d1c9558972f5ed5a5402b953750c1f`.
+- All 34 generated registry tags resolve anonymously to that same digest. OCI
+  labels match the artifact's labels.json, source fb1400b, base tag/digest, and
+  MATLAB release/version/source-image digest. Registry architecture is amd64.
+- Final metadata: Julia 1.13.1, Python 3.13.15, Hub 6.0.1, code-server 4.141.0,
+  MATLAB R2026b 26.2.0.3386108; 17 direct Julia dependencies and 24 MATLAB
+  product/support-package entries. Runtime/compiler preferences both CUDA 12.9.
+- Full resolved Manifest checksum verified:
+  `5c45f2b27123b0cfcea18742d02f8203e0f2f4d0e067dab4e949ff4e3dd1913d`.
+  See native artifact for the authoritative full checksum and environment.
+- Full final-image pull SUCCEEDED by immutable digest; fetched image architecture
+  is amd64, size 24,127,273,658 bytes. A transient layer-transfer interruption
+  retried successfully and passed checksum verification. No Hydra deployment or
+  original repository modification occurred. Physical GPU execution and a
+  Hub 5.4.3/6.0.1 deployment pairing are outside the authorized image-only work.
+- Exact published-digest licensed MATLAB check PASSED with an empty disposable
+  mounted home and real upstream startup hooks: arithmetic, Symbolic Math, image
+  resize, ResNet-50 model loading, and MATLAB R2026b product inventory.
+- This final optional local check first hit Docker VM storage exhaustion before
+  MATLAB launched. Removed only task-created diagnostic image tags/the recorded
+  superseded diagnostic image, plus 32 specifically identified task-owned private
+  reclaimable cache IDs (including their descendants). Scoped cache cleanup
+  reclaimed 28.05 GB; unrelated images/volumes/cache were preserved. Retry passed.
+- All requested image implementation/publication/validation work is complete.
+  Native source revision is fb1400b; later commits update verification docs only.
+  Personal MATLAB batch token remained local, uncommitted, excluded from builds,
+  and absent from GitHub secrets/workflows. The final image stays available locally.

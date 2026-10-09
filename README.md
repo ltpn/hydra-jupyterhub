@@ -69,8 +69,18 @@ official OS support or licensed MATLAB functionality.
 checks pass for proxy/kernelspec registration and mounted-home support-package
 discovery. Local licensed MATLAB R2026b arithmetic, Symbolic Math, image resize,
 and ResNet-50 model loading also pass across recreated mounted-home containers.
-Final native combined-image publication is being verified. Earlier R2026a
-diagnostic images were never published or deployed.
+Native amd64 combined-image build, tests, and publication
+[passed](https://github.com/ltpn/hydra-jupyterhub/actions/runs/37960361376).
+All 34 generated tags are anonymously pullable and point to the same tested
+digest. A full pull and licensed MATLAB/ResNet-50 check on that exact published
+digest also pass. Earlier R2026a diagnostic images were never published or deployed.
+
+Verified snapshot (Julia 1.13.1, MATLAB R2026b 26.2.0.3386108):
+
+```bash
+docker pull --platform linux/amd64 \
+  ghcr.io/ltpn/hydra-jupyterhub@sha256:56c07d37d0ceedb66f10862ef091adf7c2d1c9558972f5ed5a5402b953750c1f
+```
 
 The default Julia environment is computed from the running Julia version:
 `/opt/julia/environments/v<major>.<minor>/`. Project and LocalPreferences are
