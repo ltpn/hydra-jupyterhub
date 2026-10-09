@@ -23,6 +23,12 @@ docker run --rm --platform linux/amd64 --memory=6g --cpus=2 \
   -e JULIA_NUM_THREADS=2 --entrypoint python \
   -v "$home_volume:/home/jovyan" -v "$PWD/tests:/tests:ro" \
   hydra-jupyterhub:build /tests/smoke.py
+# Real local extension installation/settings survive replacing the container.
+for mode in install check; do
+  docker run --rm --platform linux/amd64 --entrypoint python \
+    -v "$home_volume:/home/jovyan" -v "$PWD/tests:/tests:ro" \
+    hydra-jupyterhub:build /tests/vscode_persistence.py "$mode"
+done
 docker volume rm "$home_volume" >/dev/null
 trap - EXIT
 

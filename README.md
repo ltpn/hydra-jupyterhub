@@ -12,6 +12,9 @@ It does not depend on, fetch files from, or deploy `nedoqs-tutorials`.
   environment, tutorial notebooks, or custom scientific Python requirements.
 - `jupyter-vscode-proxy` and `code-server` for the `/vscode` entry point. Their
   installation freezes existing conda packages. No user extensions are seeded.
+  `CODE_EXTENSIONSDIR=/home/jovyan/.local/share/code-server/extensions` places
+  user extensions on the persistent home volume instead of conda's default
+  `/opt/conda/share/code-server/extensions` location.
 - All Julia dependencies in `Project.toml`, plus the upstream HDF5/IJulia/Pluto
   functionality. The Project contains no version constraints.
 - CUDA runtime **and compiler** preferences at **12.9**, for Hydra's Pascal GPU.
@@ -61,6 +64,9 @@ Before publication, the build runs:
   Project that does not contain IJulia.
 - A repeat with a mounted notebook home, ensuring the system kernelspec remains
   available when a PVC hides the image's home directory.
+- Installation of a tiny local test extension and user settings, followed by
+  verification in a recreated container using the same home volume. This fixture
+  is used only in disposable tests, not preinstalled in the published image.
 - CPU-only imports of CUDA, plotting, tensor, ODE, and notebook packages.
 - Architecture and metadata/tag checks.
 
@@ -152,9 +158,11 @@ kernel stderr/exit status are needed. No Hydra logs or deployment were accessed.
 Dynamic per-user installation of Microsoft's VS Code Server was requested for
 evaluation only. It is **not implemented** here. Moving binaries to a PVC is not
 necessary to persist settings/extensions, and downloading Microsoft binaries at
-runtime does not itself settle Server/Marketplace licensing. The current image
-retains the standard conda code-server/proxy integration; persistence changes
-are also deferred pending the user's decision.
+runtime does not itself settle Server/Marketplace licensing. The image retains
+the standard conda code-server/proxy integration. The user approved the minimal
+extension-directory persistence fix, implemented through `CODE_EXTENSIONSDIR`;
+the editor binary remains in the image. Settings normally live in
+`~/.local/share/code-server` and `~/.config/code-server`, on the persistent home.
 
 ## Sources
 

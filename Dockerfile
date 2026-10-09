@@ -13,6 +13,7 @@ ENV HYDRA_BASE_IMAGE=${BASE_IMAGE} \
     HYDRA_BUILD_DATE=${BUILD_DATE} \
     JULIA_NUM_THREADS=auto \
     JULIA_CPU_TARGET="generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1);x86-64-v4,-rdrnd,base(1)" \
+    CODE_EXTENSIONSDIR=/home/jovyan/.local/share/code-server/extensions \
     JUPYTER_PREFER_ENV_PATH=1 \
     GKSwstype=100
 

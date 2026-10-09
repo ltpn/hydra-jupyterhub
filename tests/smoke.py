@@ -1,5 +1,7 @@
 """Run inside the built image; exercise the actual Jupyter kernel protocol."""
 import json
+import os
+import inspect
 import subprocess
 import tempfile
 from pathlib import Path
@@ -47,6 +49,17 @@ assert spec.argv[0] == "/usr/local/bin/julia", spec.argv
 assert "--project=@v" in " ".join(spec.argv), spec.argv
 assert spec.resource_dir.startswith("/opt/conda/share/jupyter/kernels/"), spec.resource_dir
 assert not Path("/opt/conda/envs/Qiskit").exists()
+assert os.environ["CODE_EXTENSIONSDIR"] == "/home/jovyan/.local/share/code-server/extensions"
+# Explicit proxy argument overrides conda's nonpersistent extensions default.
+import jupyter_vscode_proxy
+command = jupyter_vscode_proxy.setup_vscode()["command"]
+if callable(command):
+    kwargs = {"port": 12345}
+    if "unix_socket" in inspect.signature(command).parameters:
+        kwargs["unix_socket"] = ""
+    command = command(**kwargs)
+assert "--extensions-dir" in command, command
+assert command[command.index("--extensions-dir") + 1] == os.environ["CODE_EXTENSIONSDIR"], command
 
 with tempfile.TemporaryDirectory() as directory:
     cwd = Path(directory)

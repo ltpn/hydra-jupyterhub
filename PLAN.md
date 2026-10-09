@@ -78,8 +78,11 @@
   user startup file, and system installation outside the PVC home. Stable ID:
   `julia-hydra`. Test real protocol execution, not simply `using IJulia`.
 - User requested a subagent evaluation of dynamic persistent VS Code based on
-  `matteosecli/codespeck`, with NO implementation yet. Neither this alternative
-  nor the proposed extension-directory persistence fix is implemented.
+  `matteosecli/codespeck`, with NO implementation of that alternative. User then
+  explicitly approved the minimal extension persistence fix. New image sets
+  `CODE_EXTENSIONSDIR=/home/jovyan/.local/share/code-server/extensions`; tests
+  will verify proxy arguments and persistence across recreated containers.
+  Hydra deployment remains untouched. Microsoft-server alternative is deferred.
 
 ## Work status
 
