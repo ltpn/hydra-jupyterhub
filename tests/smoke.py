@@ -73,9 +73,15 @@ with tempfile.TemporaryDirectory() as directory:
         println("JULIA_KERNEL_OK ", VERSION, " ", Base.active_project())
     '''
     execute("julia-hydra", code, cwd)
-    # A user project without IJulia must not accidentally become the kernel's
-    # startup environment. Users can still explicitly Pkg.activate their project.
-    (cwd / "Project.toml").write_text("[deps]\n")
+    # Regression for the observed crash: a local project records an IJulia tree
+    # that is not installed, while the image's global IJulia is installed.
+    (cwd / "Project.toml").write_text('[deps]\nIJulia = "7073ff75-c697-5162-941a-fcdaad2a7d2a"\n')
+    (cwd / "Manifest.toml").write_text('''manifest_format = "2.0"
+[[deps.IJulia]]
+uuid = "7073ff75-c697-5162-941a-fcdaad2a7d2a"
+version = "1.0.0"
+git-tree-sha1 = "0000000000000000000000000000000000000000"
+''')
     execute("julia-hydra", code, cwd)
 
 # CPU-only package loading is a separate check from hardware GPU execution.

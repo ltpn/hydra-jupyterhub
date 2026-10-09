@@ -60,8 +60,8 @@ An arm64 laptop needs amd64 emulation; CI uses native amd64 Ubuntu runners.
 Before publication, the build runs:
 
 - Python and Julia kernels through the Jupyter messaging protocol.
-- Julia execution/imports in a fresh directory and a directory with a local
-  Project that does not contain IJulia.
+- Julia execution/imports in a fresh directory and a directory whose local
+  Manifest points to an unavailable IJulia tree (the observed crash scenario).
 - A repeat with a mounted notebook home, ensuring the system kernelspec remains
   available when a PVC hides the image's home directory.
 - Installation of a tiny local test extension and user settings, followed by
@@ -141,17 +141,37 @@ CI: publication uses the repository-scoped `GITHUB_TOKEN`.
 The existing amd64 `nedoqs-tutorials:docker` image was tested read-only locally
 at digest `sha256:0dd0d0038cd7a2c3294f95f6ab66a9364b6497d2b578682c727defe51c51d6ec`.
 Its Julia 1.12.6 IJulia kernel successfully executed `1+1`, both without and
-with an empty local Project. Therefore the reported immediate cluster crash
-has **not** been reproduced and cannot honestly be blamed on Julia 1.12.6.
+with an empty local Project. The user subsequently authorized read-only notebook
+diagnostics, which identified the actual failure:
 
-Immediate kernel death can result from stale per-user kernelspecs referencing a
-removed executable, different startup/project settings, permissions, native
-library/cache errors, or termination by resource limits. Terminal Julia and
-IJulia do not necessarily select the same binary or launch environment.
-The new image regenerates system kernelspecs against the installed Julia/IJulia
-and default project and avoids user startup files. These precautions do not
-establish the old failure's cause; a failing user's effective kernelspec and
-kernel stderr/exit status are needed. No Hydra logs or deployment were accessed.
+- The shipped kernel starts with `--project=@.`, selecting a nearby local Project.
+- The cloned tutorial project's Manifest records IJulia **1.34.2** and tree
+  `d9ea0eeac84e4a7397858847c8b5f1d4ef515ded`.
+- The image's populated global environment and package depot contain IJulia
+  **1.34.4**, tree `102656c4efc9737f892e1bca7e66ae374c650740`.
+- The kernel stderr repeatedly reports that the required IJulia is not installed,
+  then the Jupyter kernel restarter gives up.
+
+This establishes an uninstantiated local Manifest/environment mismatch in the
+tutorial-directory launch context, not evidence that Julia 1.12.6 itself crashes.
+A subsequent read-only `Base.find_package("IJulia")` check finds the installed
+package from `/home/jovyan` but returns `nothing` from the tutorial directory.
+A new notebook can inherit an existing project's environment; a new `.ipynb`
+does not instantiate that project. A separate failure from the fresh home-level
+context has not been reproduced and should be revisited after image testing.
+Plain terminal Julia selects the global environment, and VS Code/terminal Julia
+startup does not necessarily import IJulia at all.
+
+The new kernels explicitly use the populated global `@v<major>.<minor>` project
+for startup, matching the user's desired default-environment approach. The smoke
+test includes a local Project/Manifest with an unavailable IJulia tree and checks
+that startup still succeeds. Users can explicitly `Pkg.activate` another project
+after the kernel starts. A truly project-specific IJulia kernel requires that
+project's dependencies to be instantiated; the global default is not a substitute
+for instantiating an explicitly activated project.
+
+Only logs and relevant dependency/kernel metadata were inspected on Hydra. No
+user files, running notebooks, source repository, or deployment were modified.
 
 ## Scope of the VS Code alternative
 
@@ -163,6 +183,7 @@ the standard conda code-server/proxy integration. The user approved the minimal
 extension-directory persistence fix, implemented through `CODE_EXTENSIONSDIR`;
 the editor binary remains in the image. Settings normally live in
 `~/.local/share/code-server` and `~/.config/code-server`, on the persistent home.
+See [VSCODE-EVALUATION.md](VSCODE-EVALUATION.md) for the comparison and sources.
 
 ## Sources
 

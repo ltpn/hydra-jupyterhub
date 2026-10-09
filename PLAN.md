@@ -6,7 +6,9 @@
 - New container: `ghcr.io/ltpn/hydra-jupyterhub`, Linux amd64 only.
 - One long-lived `main` branch; update bots necessarily use temporary PR branches.
 - Inspect `ltpn/nedoqs-tutorials` read-only. Never push to it.
-- Do not inspect, change, deploy to, or run tests on the Hydra cluster for this task.
+- Do not change, deploy to, or run image tests on the Hydra cluster. User later
+  authorized read-only notebook diagnostics (kernel logs/specs) on 2026-10-09.
+  This exception does not authorize restarting a pod or modifying user files.
 - Do not change existing Hydra configuration, workflows, secrets, or applications.
 - All implementation files belong to this new directory/repository.
 
@@ -88,7 +90,7 @@
 
 - [x] Scope recorded; source branches inspected read-only.
 - [x] Upstream base and CUDA preference support inspected (GPU hardware untested).
-- [ ] Old kernel failure reproduced or clearly qualified.
+- [x] Immediate kernel failure identified with authorized read-only diagnostics.
 - [x] Dockerfile, project, CI, update automation, metadata, tests implemented.
 - [x] Local shell/YAML syntax and metadata tag unit tests pass.
 - [x] New public GitHub repository created; initial plan pushed on main.
@@ -98,3 +100,34 @@
 
 Update this file with decisions, commands/results, failures, and outstanding
 work as implementation progresses. Never mark unverified work complete.
+
+## Current validation progress
+
+- Implementation commit `b72c3ae`; superseded by approved persistence commit
+  `acdab03` (with two-container extension/settings tests).
+- Native Actions run `37933714709` was cancelled deliberately after the newer
+  implementation was pushed; it was not a successful image build.
+- Current native build: `37934140553` on commit `acdab03`.
+- Local unit tests, Python compilation, shell syntax, TOML constraints/preferences,
+  and YAML parsing passed. These are not a substitute for the native image tests.
+- Dependabot jobs ran successfully; no update PR is expected while the configured
+  upstream version is already current. Prefix isolation was checked against
+  Dependabot's Docker Tag parser/comparison source.
+- GitHub Container Registry defaults new packages to private even for a public
+  repository. After a successful publish, verify anonymous access and arrange
+  only this new package's public visibility if necessary; do not broaden account
+  tokens or workflow review permissions.
+- User explicitly approved read-only notebook diagnostics. Only inspect notebook
+  logs and effective Julia kernelspec/environment; no restart, write, or deploy.
+- Confirmed kernel error: local tutorial Manifest requires IJulia 1.34.2/tree
+  `d9ea0eeac84e4a7397858847c8b5f1d4ef515ded`; only global IJulia 1.34.4/tree
+  `102656c4efc9737f892e1bca7e66ae374c650740` is present in the image's depot.
+  Kernel `--project=@.` selects the local environment and fails importing IJulia.
+  New explicit-global kernels avoid this; regression fixture now includes a
+  local Manifest referencing an unavailable IJulia tree. No live files changed.
+- User notes the failure can also occur for new notebooks. A new notebook can
+  inherit the surrounding project's environment, but do not generalize the
+  observed worktree failure to all contexts: read-only Base.find_package finds
+  global IJulia from /home/jovyan and returns nothing from the tutorial directory.
+  Home-level Untitled notebook has no recorded kernelspec. Further live
+  diagnostics are stopped per user's request; no live kernel was started.
