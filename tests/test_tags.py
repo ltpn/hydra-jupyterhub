@@ -34,6 +34,18 @@ class TagsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             module.safe_tag("a" * 129)
 
+    def test_matching_base_and_amd64_aliases_only(self):
+        rows = [
+            {"name": "julia-1.13.1", "manifest_digest": "index"},
+            {"name": "2026-10-05", "manifest_digest": "index"},
+            {"name": "x86_64-f2974d177c3c", "manifest_digest": "amd64"},
+            {"name": "aarch64-f2974d177c3c", "manifest_digest": "arm64"},
+            {"name": "arm64-misleading", "manifest_digest": "index"},
+            {"name": "julia-1.12.6", "manifest_digest": "old"},
+        ]
+        self.assertEqual(module.matching_base_tags(rows, {"index", "amd64"}),
+                         ["2026-10-05", "julia-1.13.1", "x86_64-f2974d177c3c"])
+
 
 if __name__ == "__main__":
     unittest.main()

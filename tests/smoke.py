@@ -45,6 +45,9 @@ assert metadata["julia"]["cuda_compiler"] == "12.9"
 assert metadata["python"]["packages"].get("jupyter-vscode-proxy")
 assert metadata["python"]["packages"].get("jupyter-pluto-proxy")
 spec = KernelSpecManager().get_kernel_spec("julia-hydra")
+julia_specs = [name for name, row in KernelSpecManager().get_all_specs().items()
+               if row["spec"].get("language") == "julia"]
+assert julia_specs == ["julia-hydra"], julia_specs
 assert spec.argv[0] == "/usr/local/bin/julia", spec.argv
 assert "--project=@." in spec.argv, spec.argv
 assert spec.resource_dir.startswith("/opt/conda/share/jupyter/kernels/"), spec.resource_dir

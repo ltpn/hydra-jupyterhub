@@ -23,11 +23,19 @@ ENV["JUPYTER_DATA_DIR"] = joinpath(ENV["CONDA_DIR"], "share", "jupyter")
 ENV["IJULIA_NODEFAULTKERNEL"] = "1"
 Pkg.build("IJulia")
 using IJulia
-for specname in ("julia-hydra", "julia-$(VERSION.major).$(VERSION.minor)")
-    IJulia.installkernel("Julia Hydra", "--project=@.";
-        julia=Cmd(["/usr/local/bin/julia"]), specname,
-        displayname="Julia $(VERSION) (Hydra)")
+# Replace inherited system Julia specs with one stable entry. User-home specs
+# are outside this directory and are never modified during image construction.
+kernels_dir = joinpath(ENV["JUPYTER_DATA_DIR"], "kernels")
+for name in readdir(kernels_dir)
+    specdir = joinpath(kernels_dir, name)
+    specfile = joinpath(specdir, "kernel.json")
+    if isfile(specfile) && occursin(r"\"language\"\s*:\s*\"julia\"", read(specfile, String))
+        rm(specdir; recursive=true)
+    end
 end
+IJulia.installkernel("Julia Hydra", "--project=@.";
+    julia=Cmd(["/usr/local/bin/julia"]), specname="julia-hydra",
+    displayname="Julia $(VERSION) (Hydra)")
 
 # These are the precise inputs/results for this image; do not commit a Manifest.
 metadata_dir = "/usr/local/share/hydra-jupyterhub"

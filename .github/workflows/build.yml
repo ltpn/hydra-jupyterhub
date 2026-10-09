@@ -2,7 +2,7 @@ name: Build, test, and publish amd64
 on:
   push:
     branches: [main]
-    paths: [Dockerfile, Dockerfile.matlab, matlab-base-dependencies.txt, Project.toml, LocalPreferences.toml, 'scripts/**', 'tests/**', '.github/workflows/build.yml']
+    paths: [Dockerfile, matlab-base-dependencies.txt, Project.toml, LocalPreferences.toml, 'scripts/**', 'tests/**', '.github/workflows/build.yml']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -57,5 +57,9 @@ jobs:
             docker tag hydra-jupyterhub:tested "$IMAGE:$tag"
             docker push "$IMAGE:$tag"
           done < artifacts/tags.txt
+          latest_digest="$(docker buildx imagetools inspect "$IMAGE:latest" --format '{{.Manifest.Digest}}')"
+          julia_version="$(python3 -c 'import json; print(json.load(open("artifacts/versions.json"))["julia"]["version"])')"
+          julia_digest="$(docker buildx imagetools inspect "$IMAGE:julia-$julia_version" --format '{{.Manifest.Digest}}')"
+          test "$julia_digest" = "$latest_digest"
           docker inspect hydra-jupyterhub:tested --format '{{json .Config.Labels}}' > artifacts/published-labels.json
           printf 'Published `%s:latest` for linux/amd64 only.\n' "$IMAGE" >> "$GITHUB_STEP_SUMMARY"
