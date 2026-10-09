@@ -255,3 +255,17 @@ work as implementation progresses. Never mark unverified work complete.
   correct code-server 4.141.0, and 24 MATLAB product/support-package entries.
 - R2026a test images are not published and nothing is deployed to Hydra.
   Final R2026b combined build/publication remains pending the user's source tag.
+
+## Resumed validation
+
+- User asked to resume after usage limit. Existing goal status is usageLimited;
+  status resumption is user/system controlled, not changed through update_goal.
+  Continue the explicitly requested task and keep progress in this plan.
+- LTPN's alternate Dockerfile now says R2026b, but the published tag is still
+  absent at the first resumed check. Inspect original workflow read-only only.
+- Closer inspection of Dependabot run 37941613084 shows no parsed dependency
+  checks, not evidence that the Julia base was actually tracked. Replace the
+  whole-image ARG/FROM indirection with a literal pinned FROM. Store that exact
+  line's image reference in base-image.txt for metadata, so bot updates do not
+  leave a duplicate metadata string stale. Restrict Docker updates to the Julia
+  repository name as documented by GitHub (registry excluded from name).

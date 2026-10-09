@@ -40,9 +40,11 @@ tools = {}
 for name, command in {"code-server": ["code-server", "--version"],
                       "conda": ["conda", "--version"], "mamba": ["mamba", "--version"]}.items():
     tools[name] = parse_tool_version(subprocess.check_output(command, text=True, stderr=subprocess.PIPE))
+base_record = ROOT / "base-image.txt"
+base_image = base_record.read_text().strip() if base_record.is_file() else os.environ["HYDRA_BASE_IMAGE"]
 metadata = {
     "schema_version": 1,
-    "image": {"architecture": platform.machine(), "base_image": os.environ["HYDRA_BASE_IMAGE"],
+    "image": {"architecture": platform.machine(), "base_image": base_image,
               "source_revision": os.environ["HYDRA_SOURCE_REVISION"], "created": os.environ["HYDRA_BUILD_DATE"]},
     "julia": julia,
     "python": {"version": platform.python_version(), "packages": python_packages},

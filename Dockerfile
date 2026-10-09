@@ -1,15 +1,12 @@
 # syntax=docker/dockerfile:1
 # Dependabot tracks stable Julia-prefixed tags and the corresponding base digest.
-ARG BASE_IMAGE=quay.io/jupyter/julia-notebook:julia-1.13.1@sha256:930f69277b2589b3dd671d1b4c1a0b554a811388b3400c7bfca6c6d5986f48dd
-FROM ${BASE_IMAGE}
-ARG BASE_IMAGE
+FROM quay.io/jupyter/julia-notebook:julia-1.13.1@sha256:930f69277b2589b3dd671d1b4c1a0b554a811388b3400c7bfca6c6d5986f48dd
 ARG TARGETARCH
 ARG SOURCE_REVISION=local
 ARG BUILD_DATE=unknown
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-ENV HYDRA_BASE_IMAGE=${BASE_IMAGE} \
-    HYDRA_SOURCE_REVISION=${SOURCE_REVISION} \
+ENV HYDRA_SOURCE_REVISION=${SOURCE_REVISION} \
     HYDRA_BUILD_DATE=${BUILD_DATE} \
     JULIA_NUM_THREADS=auto \
     JULIA_CPU_TARGET="generic;sandybridge,-xsaveopt,clone_all;haswell,-rdrnd,base(1);x86-64-v4,-rdrnd,base(1)" \
@@ -19,11 +16,12 @@ ENV HYDRA_BASE_IMAGE=${BASE_IMAGE} \
 
 USER root
 RUN test "${TARGETARCH}" = amd64 || { echo 'This image supports linux/amd64 only.' >&2; exit 1; }
-COPY Project.toml LocalPreferences.toml /opt/hydra-build/
+COPY Dockerfile Project.toml LocalPreferences.toml /opt/hydra-build/
 COPY scripts/install-julia.jl scripts/export-metadata.py scripts/runtime_versions.py /opt/hydra-build/
 RUN chown -R "${NB_UID}:${NB_GID}" /opt/hydra-build \
     && mkdir -p /usr/local/share/hydra-jupyterhub \
-    && chown "${NB_UID}:${NB_GID}" /usr/local/share/hydra-jupyterhub
+    && chown "${NB_UID}:${NB_GID}" /usr/local/share/hydra-jupyterhub \
+    && awk '/^FROM / {print $2; exit}' /opt/hydra-build/Dockerfile > /usr/local/share/hydra-jupyterhub/base-image.txt
 
 USER ${NB_UID}
 # Only UI integration is added; no tutorial requirements, Qiskit, or second Python.
