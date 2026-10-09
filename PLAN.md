@@ -41,8 +41,8 @@
 4. Keep standard Julia CPU targeting portable across amd64 machines rather than
    compile for the GitHub runner or arm64 laptop's native CPU.
 5. Remove summer-school requirements, Qiskit environment, tutorial files, and
-   cross-branch build machinery. Pending user preference: retain only the small
-   VS Code/code-server integration beyond the upstream Python environment.
+   cross-branch build machinery. User confirmed retaining the small VS Code/
+   code-server integration beyond the upstream Python environment.
 6. Build and test natively on an amd64 GitHub-hosted runner. Use emulated local
    amd64 Docker only for focused diagnostics if practical.
 7. Test Jupyter Python and IJulia kernel execution, Julia imports, clean/mounted
@@ -52,17 +52,44 @@
    container tags and labels from actual runtime versions, not Project guesses.
 9. Preserve meaningful upstream software-version tag families using installed
    versions, and add Julia direct-dependency tags. Record the actual base digest.
-10. Public repository/image is the proposed default, matching the public
-    reference and allowing free hosted CI. User preference question pending.
+10. User confirmed public repository and image. Repository created successfully.
+
+## Confirmed implementation decisions and observations
+
+- Latest registry base: Julia 1.13.1, index digest
+  `sha256:930f69277b2589b3dd671d1b4c1a0b554a811388b3400c7bfca6c6d5986f48dd`.
+- User clarified that Project/LocalPreferences must populate the default global
+  environment and CUDA must remain 12.9. Directory is computed dynamically.
+- CUDA runtime and compiler preferences both set to 12.9, with no Project compat.
+- Fresh resolution/precompilation per build; Manifest retained in image/artifact.
+- Portable upstream amd64 multitarget CPU settings; no native specialization.
+- Native GitHub-hosted amd64 CI chosen. Docker Desktop also started locally.
+- Auto-review rejected granting workflow PR-review approval permissions. That
+  change was not executed. Built-in Dependabot performs base/action update PRs
+  without this grant; workflow review permission remains false.
+- Default base currently includes Hub 6.0.1. The earlier Hydra Hub is 5.4.3;
+  document/test compatibility before any future deployment, not in this task.
+- Local legacy image digest
+  `sha256:0dd0d0038cd7a2c3294f95f6ab66a9364b6497d2b578682c727defe51c51d6ec`
+  (created 2026-07-23) successfully ran its Julia 1.12.6 IJulia kernel in a fresh
+  notebook folder and with an empty local Project. User reports immediate death
+  before code on the cluster. Cause remains unconfirmed; do not invent one.
+- New kernels use `/usr/local/bin/julia`, explicit current global project, no
+  user startup file, and system installation outside the PVC home. Stable ID:
+  `julia-hydra`. Test real protocol execution, not simply `using IJulia`.
+- User requested a subagent evaluation of dynamic persistent VS Code based on
+  `matteosecli/codespeck`, with NO implementation yet. Neither this alternative
+  nor the proposed extension-directory persistence fix is implemented.
 
 ## Work status
 
 - [x] Scope recorded; source branches inspected read-only.
-- [ ] Upstream image and CUDA compatibility verified.
+- [x] Upstream base and CUDA preference support inspected (GPU hardware untested).
 - [ ] Old kernel failure reproduced or clearly qualified.
-- [ ] Dockerfile, project, CI, update automation, metadata, tests implemented.
-- [ ] Local validation completed.
-- [ ] New GitHub repository created and code pushed.
+- [x] Dockerfile, project, CI, update automation, metadata, tests implemented.
+- [x] Local shell/YAML syntax and metadata tag unit tests pass.
+- [x] New public GitHub repository created; initial plan pushed on main.
+- [ ] Implementation pushed; native CI and actual image verification pending.
 - [ ] Native amd64 build/test/publication successful.
 - [ ] Registry metadata, tags, and final image pull verified.
 

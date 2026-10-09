@@ -1,0 +1,7 @@
+**
+!Dockerfile
+!Project.toml
+!LocalPreferences.toml
+!scripts/
+!scripts/install-julia.jl
+!scripts/export-metadata.py

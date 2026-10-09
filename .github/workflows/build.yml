@@ -1,0 +1,57 @@
+name: Build, test, and publish amd64
+on:
+  push:
+    branches: [main]
+    paths: [Dockerfile, Project.toml, LocalPreferences.toml, 'scripts/**', 'tests/**', '.github/workflows/build.yml']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '37 5 * * 2'
+concurrency:
+  group: image-${{ github.ref }}
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  image:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Unit tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Build and test (fresh Julia resolution)
+        run: bash scripts/build.sh
+      - name: Upload the resolved environment and versions
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: resolved-environment-amd64
+          path: artifacts/
+          if-no-files-found: warn
+          retention-days: 30
+      - name: Log in to GHCR
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish tested image and actual-version tags
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        env:
+          IMAGE: ghcr.io/ltpn/hydra-jupyterhub
+        run: |
+          set -euo pipefail
+          while IFS= read -r tag; do
+            docker tag hydra-jupyterhub:tested "$IMAGE:$tag"
+            docker push "$IMAGE:$tag"
+          done < artifacts/tags.txt
+          docker inspect hydra-jupyterhub:tested --format '{{json .Config.Labels}}' > artifacts/published-labels.json
+          printf 'Published `%s:latest` for linux/amd64 only.\n' "$IMAGE" >> "$GITHUB_STEP_SUMMARY"
