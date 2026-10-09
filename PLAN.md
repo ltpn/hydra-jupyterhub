@@ -243,3 +243,15 @@ work as implementation progresses. Never mark unverified work complete.
   unavailable; do not spend another Julia precompile cycle until that prerequisite
   is published. Waiting for user-provided R2026b source; no original workflow runs
   or Hydra operations are triggered here.
+- Corrected source commit a9328fa pushed. Run 37945799712 confirms the sole
+  current prerequisite error: `ghcr.io/ltpn/matlab:R2026b: not found`.
+- Full public notebook image pull by immutable digest SUCCEEDED locally.
+- MATLAB layer also built over that actual published/full scientific notebook,
+  explicitly using R2026a for a LOCAL-ONLY combined test. Real startup hooks,
+  proxy/kernelspec, and licensed arithmetic/symbolic/image-resize/ResNet-50
+  model loading all PASSED across recreated containers sharing a mounted home.
+  All existing Python distribution versions and the resolved Julia Manifest
+  are unchanged by the MATLAB layer. Metadata retains all 17 direct Julia deps,
+  correct code-server 4.141.0, and 24 MATLAB product/support-package entries.
+- R2026a test images are not published and nothing is deployed to Hydra.
+  Final R2026b combined build/publication remains pending the user's source tag.
