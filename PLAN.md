@@ -136,3 +136,10 @@ work as implementation progresses. Never mark unverified work complete.
   Superseding the earlier workaround decision, retain normal IJulia `--project=@.`
   discovery in regenerated stable/system kernels. Tests cover global startup
   and local project discovery, not masking an uninstantiated user Manifest.
+- Native run 37934140553 resolved all 17 direct dependencies and successfully
+  precompiled 725 packages on Julia 1.13.1. It failed the first smoke assertion
+  because Python distribution names were not normalized (underscore vs hyphen),
+  not because Julia/package precompilation failed. Normalize PEP 503 names in
+  metadata and export metadata before smoke checks for failure diagnostics.
+- Superseded runs 37936384203/37937626463 cancelled before further compilation;
+  the final source preserves normal IJulia project selection as the user agreed.

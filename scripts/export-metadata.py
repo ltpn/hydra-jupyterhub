@@ -4,6 +4,7 @@ import importlib.metadata
 import json
 import os
 import platform
+import re
 import subprocess
 import sys
 import tomllib
@@ -26,7 +27,7 @@ for name, entries in sorted(manifest["deps"].items()):
 julia.update(direct_packages=direct, packages=packages,
              cuda_runtime=preferences["CUDA_Runtime_jll"]["version"],
              cuda_compiler=preferences["CUDA_Compiler_jll"]["version"])
-python_packages = {dist.metadata["Name"].lower(): dist.version
+python_packages = {re.sub(r"[-_.]+", "-", dist.metadata["Name"]).lower(): dist.version
                    for dist in importlib.metadata.distributions() if dist.metadata["Name"]}
 os_info = {}
 for line in Path("/etc/os-release").read_text().splitlines():
