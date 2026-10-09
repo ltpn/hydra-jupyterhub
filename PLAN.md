@@ -194,6 +194,8 @@ work as implementation progresses. Never mark unverified work complete.
   Math, image resize, ResNet-50 entry point; `ver` confirms all 11 installed
   products including MATLAB and Symbolic Math. This checks the existing source
   installation, not the new combined Ubuntu 26.04 image. Token stayed local.
+- Strengthened and reran that check: `resnet50` actually loads the pretrained
+  network and has layers, confirming inherited support-package data is usable.
 - First batch expression used a multiline string and yielded no success marker.
   Flattened it to a single-line statement as required by this launcher behavior;
   explicit marker validation now prevents zero-exit false positives.

@@ -24,6 +24,7 @@ with tempfile.TemporaryDirectory(prefix="hydra-matlab-batch-") as directory:
         assert(double(sym(1)+sym(1))==2);
         assert(isequal(size(imresize(ones(4),2)),[8 8]));
         assert(exist('resnet50','file')==2);
+        net=resnet50; assert(numel(net.Layers)>0);
         fprintf('HYDRA_MATLAB_BATCH_OK %s\\n',version('-release'));
         fprintf('HYDRA_MATLAB_PRODUCTS_JSON %s\\n',jsonencode(ver));
     """

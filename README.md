@@ -46,7 +46,7 @@ GitHub OAuth authenticates access to JupyterHub; it does not provide a MATLAB li
 Local batch validation can use a read-only token mount at
 `/run/secrets/matlab-batch-token` with `tests/matlab_batch.py` in a disposable
 container. The test downloads MathWorks' batch licensing wrapper, checks MATLAB,
-Symbolic Math, image processing, and the ResNet-50 entry point, and prints only
+Symbolic Math, image processing, and actual ResNet-50 model loading, and prints only
 explicit result markers. It does not run in GitHub Actions. Repository/workflow
 writers could extract an Actions secret, so a personal batch token must remain
 local under the user's confidentiality requirement. Batch licensing does not
