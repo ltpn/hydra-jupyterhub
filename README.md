@@ -31,6 +31,12 @@ It copies the installation, support packages at their original absolute paths,
 and managed MathWorks Service Host. It preserves the notebook user and Jupyter
 entrypoint; it does not inherit the MATLAB container's VNC desktop or startup
 command. MATLAB kernelspecs live outside the persistent notebook home.
+The upstream `before-notebook.d` startup hook links the bundled support-package
+root into the notebook user's expected `~/Documents/MATLAB/SupportPackages/<release>`
+location. This runs after the home volume is mounted and survives container
+replacement; it leaves an existing user-managed support-package root intact.
+Copying model files alone is insufficient because MATLAB otherwise looks under
+the new notebook user's home, rather than the original MATLAB image's home.
 
 The source is LTPN's
 [deep-learning variant](https://github.com/ltpn/matlab-dockerfile/blob/main/alternates/building-on-matlab-docker-image/Dockerfile),

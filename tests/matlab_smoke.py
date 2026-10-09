@@ -3,6 +3,7 @@ import json
 import os
 import shutil
 import sys
+import subprocess
 from pathlib import Path
 
 from jupyter_client.kernelspec import KernelSpecManager
@@ -23,6 +24,12 @@ assert os.access(root / "bin/matlab", os.X_OK)
 assert shutil.which("Xvfb") and shutil.which("xauth")
 assert Path(os.environ["MATHWORKS_SERVICE_HOST_MANAGED_INSTALL_ROOT"]).is_dir()
 assert Path(metadata["matlab"]["support_packages_root"]).is_dir()
+# Exercise the same startup hook twice, including when a PVC hides image home.
+hook = "/usr/local/bin/before-notebook.d/20-matlab-support-packages.sh"
+for _ in range(2):
+    subprocess.run(["bash", hook], check=True)
+user_root = Path.home() / "Documents/MATLAB/SupportPackages" / root.name
+assert user_root.resolve() == Path(metadata["matlab"]["support_packages_root"]).resolve()
 spec = KernelSpecManager().get_kernel_spec("jupyter_matlab_kernel")
 assert spec.resource_dir.startswith("/opt/conda/share/jupyter/kernels/"), spec.resource_dir
 assert Path(spec.argv[0]).resolve() == Path(sys.executable).resolve(), spec.argv

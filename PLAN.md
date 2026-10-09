@@ -99,7 +99,7 @@
 - [x] Dockerfile, project, CI, update automation, metadata, tests implemented.
 - [x] Local shell/YAML syntax and metadata tag unit tests pass.
 - [x] New public GitHub repository created; initial plan pushed on main.
-- [ ] Implementation pushed; native CI and actual image verification pending.
+- [x] Implementation pushed; native notebook CI successful.
 - [ ] Native amd64 build/test/publication successful.
 - [ ] Registry metadata, tags, and final image pull verified.
 
@@ -204,3 +204,42 @@ work as implementation progresses. Never mark unverified work complete.
   and source-image digest labels without guessing from the requested release.
 - Local unit tests, Python compilation, shell syntax, YAML parsing and diff
   whitespace checks pass for the new layer; actual combined build is pending.
+
+## Successful notebook publication and MATLAB compatibility checks
+
+- Native notebook run 37938254659 on 00a06b5 PASSED: two real kernel/import
+  smoke runs, including a mounted home, and VS Code extension/settings checks
+  across recreated containers. Published digest:
+  `sha256:96bbca771325139df59f94ee3471bd9fdf61d6656b73afc748831b130f623933`.
+- Explicit anonymous registry-token test returns HTTP 200; registry config
+  confirms amd64 and matching source revision. No visibility change or broader
+  account token scope was needed. Package REST API requires read:packages;
+  do not request this scope merely to query visibility already proven anonymously.
+- Artifact review identified one incorrect version field: code-server's first-run
+  timestamp log was parsed as its version, producing an erroneous code-server
+  alias in the initial notebook-only publication. Correct the parser to select
+  a semantic version line; regression tests cover timestamp noise. Combined
+  probe now reports actual code-server 4.141.0. Do not represent that initial
+  image as the final MATLAB-enabled image or final corrected metadata.
+- Latest Julia notebook/Python/Ubuntu 26.04 compatibility probe built locally
+  without the full extra Julia package installation (not published/deployed).
+  MATLAB proxy installed successfully with all existing Python versions frozen.
+  Version metadata identifies 24 installed products/support packages.
+- MATLAB executable/proxy/system kernelspec checks passed normally and with a
+  mounted home. Licensed arithmetic, Symbolic Math, and image processing worked;
+  ResNet-50 initially failed with `nnet_cnn:supportpackages:NotInstalled` because
+  the default support root followed the new user's home. MW_SUPPORT_PACKAGE_ROOT
+  did not fix this (do not add it as an unverified workaround).
+- A symlink from the notebook user's default support-root location to the
+  bundled original support directory fixes actual model loading. Implement it
+  through the verified upstream before-notebook hook as uid 1000/gid 100,
+  after home/PVC mounting; preserve existing user-managed roots.
+- Real start.sh hook execution, proxy/kernelspec checks, and licensed ResNet-50
+  loading all PASSED across recreated local probe containers sharing a disposable
+  volume. Token mount remained local/read-only; no raw licensing output uploaded.
+- Use the daemon builder associated with `docker context show`, so Docker Desktop
+  desktop-linux and native CI default contexts both reuse local image layers.
+- MATLAB-enabled run 37941981745 fails early as designed while LTPN R2026b is
+  unavailable; do not spend another Julia precompile cycle until that prerequisite
+  is published. Waiting for user-provided R2026b source; no original workflow runs
+  or Hydra operations are triggered here.

@@ -10,6 +10,7 @@ import sys
 import tomllib
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from runtime_versions import parse_tool_version
 
 ROOT = Path("/usr/local/share/hydra-jupyterhub")
 project = tomllib.loads((ROOT / "Project.toml").read_text())
@@ -38,7 +39,7 @@ for line in Path("/etc/os-release").read_text().splitlines():
 tools = {}
 for name, command in {"code-server": ["code-server", "--version"],
                       "conda": ["conda", "--version"], "mamba": ["mamba", "--version"]}.items():
-    tools[name] = subprocess.check_output(command, text=True).splitlines()[0].split()[-1 if name == "conda" else 0]
+    tools[name] = parse_tool_version(subprocess.check_output(command, text=True, stderr=subprocess.PIPE))
 metadata = {
     "schema_version": 1,
     "image": {"architecture": platform.machine(), "base_image": os.environ["HYDRA_BASE_IMAGE"],

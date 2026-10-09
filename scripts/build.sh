@@ -6,6 +6,7 @@ revision="$(git rev-parse HEAD)"
 created="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 build_id="${GITHUB_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)}-${GITHUB_RUN_ATTEMPT:-local}"
 include_matlab="${HYDRA_INCLUDE_MATLAB:-1}"
+daemon_builder="$(docker context show)"
 if [[ "$include_matlab" == 1 ]]; then
   matlab_image="${MATLAB_IMAGE:-$(sed -n 's/^ARG MATLAB_IMAGE=//p' Dockerfile.matlab)}"
   # Fail before expensive Julia compilation if the required upstream release
@@ -15,7 +16,7 @@ fi
 
 # Fresh Julia resolution on EVERY build, including scheduled builds of the same
 # commit. A committed Manifest or a cached package-install layer defeats that.
-docker build --builder default --platform linux/amd64 --pull --no-cache \
+docker build --builder "$daemon_builder" --platform linux/amd64 --pull --no-cache \
   --build-arg SOURCE_REVISION="$revision" --build-arg BUILD_DATE="$created" \
   -t hydra-jupyterhub:build .
 
@@ -61,7 +62,7 @@ docker volume rm "$home_volume" >/dev/null
 trap - EXIT
 
 python3 scripts/image-tags.py artifacts/versions.json --build-id "$build_id" --output artifacts
-docker build --builder default --platform linux/amd64 --pull=false --network=none \
+docker build --builder "$daemon_builder" --platform linux/amd64 --pull=false --network=none \
   -f artifacts/Dockerfile.metadata -t hydra-jupyterhub:tested .
 docker inspect hydra-jupyterhub:tested --format '{{.Architecture}}' | grep -qx amd64
 printf 'Tested image: hydra-jupyterhub:tested; resolved metadata and tags: artifacts/\n'

@@ -8,3 +8,5 @@
 !scripts/
 !scripts/install-julia.jl
 !scripts/export-metadata.py
+!scripts/runtime_versions.py
+!scripts/matlab-support-packages.sh

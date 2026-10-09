@@ -42,9 +42,11 @@ RUN python -c 'import importlib.metadata as m; from pathlib import Path; Path("/
     && fix-permissions "${CONDA_DIR}"
 
 COPY scripts/export-metadata.py /tmp/hydra-export-metadata.py
+COPY scripts/runtime_versions.py /tmp/runtime_versions.py
+COPY scripts/matlab-support-packages.sh /usr/local/bin/before-notebook.d/20-matlab-support-packages.sh
 RUN python /tmp/hydra-export-metadata.py
 USER root
-RUN rm /tmp/hydra-export-metadata.py
+RUN rm /tmp/hydra-export-metadata.py /tmp/runtime_versions.py
 USER ${NB_UID}
 WORKDIR /home/${NB_USER}
 LABEL org.opencontainers.image.description="Standalone amd64 Julia notebook with CUDA 12.9, VS Code, and MATLAB integration"

@@ -20,13 +20,19 @@ with tempfile.TemporaryDirectory(prefix="hydra-matlab-batch-") as directory:
     environment = os.environ.copy()
     environment["MLM_LICENSE_TOKEN"] = token_file.read_text().strip()
     statement = """
+        try;
         assert(1+1==2);
+        fprintf('HYDRA_MATLAB_STAGE arithmetic\\n');
         assert(double(sym(1)+sym(1))==2);
+        fprintf('HYDRA_MATLAB_STAGE symbolic\\n');
         assert(isequal(size(imresize(ones(4),2)),[8 8]));
+        fprintf('HYDRA_MATLAB_STAGE image_resize\\n');
         assert(exist('resnet50','file')==2);
+        fprintf('HYDRA_MATLAB_STAGE model_entrypoint\\n');
         net=resnet50; assert(numel(net.Layers)>0);
         fprintf('HYDRA_MATLAB_BATCH_OK %s\\n',version('-release'));
         fprintf('HYDRA_MATLAB_PRODUCTS_JSON %s\\n',jsonencode(ver));
+        catch ME; fprintf('HYDRA_MATLAB_ERROR_ID %s\\n',ME.identifier); rethrow(ME); end;
     """
     statement = " ".join(statement.split())
     try:
@@ -41,7 +47,8 @@ with tempfile.TemporaryDirectory(prefix="hydra-matlab-batch-") as directory:
     passed = False
     for line in (result.stdout + result.stderr).splitlines():
         line = line.strip()
-        if line.startswith(("HYDRA_MATLAB_BATCH_OK ", "HYDRA_MATLAB_PRODUCTS_JSON ")):
+        if line.startswith(("HYDRA_MATLAB_BATCH_OK ", "HYDRA_MATLAB_PRODUCTS_JSON ",
+                            "HYDRA_MATLAB_STAGE ", "HYDRA_MATLAB_ERROR_ID ")):
             print(line)
             passed = passed or line.startswith("HYDRA_MATLAB_BATCH_OK ")
     if result.returncode or not passed:

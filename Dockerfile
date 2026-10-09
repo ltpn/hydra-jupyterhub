@@ -20,7 +20,7 @@ ENV HYDRA_BASE_IMAGE=${BASE_IMAGE} \
 USER root
 RUN test "${TARGETARCH}" = amd64 || { echo 'This image supports linux/amd64 only.' >&2; exit 1; }
 COPY Project.toml LocalPreferences.toml /opt/hydra-build/
-COPY scripts/install-julia.jl scripts/export-metadata.py /opt/hydra-build/
+COPY scripts/install-julia.jl scripts/export-metadata.py scripts/runtime_versions.py /opt/hydra-build/
 RUN chown -R "${NB_UID}:${NB_GID}" /opt/hydra-build \
     && mkdir -p /usr/local/share/hydra-jupyterhub \
     && chown "${NB_UID}:${NB_GID}" /usr/local/share/hydra-jupyterhub
