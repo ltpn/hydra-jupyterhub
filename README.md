@@ -65,10 +65,12 @@ MathWorks provides that dependency definition, but its
 currently lists Ubuntu 24.04/22.04, not 26.04. Image checks do not establish
 official OS support or licensed MATLAB functionality.
 
-**Integration status:** R2026b is not yet published in LTPN's package at the time
-this layer was prepared. Full MATLAB build/testing remains pending that tag.
-An R2026a override can be used for exploratory checks; it must not be presented
-as the requested R2026b image.
+**Integration status:** LTPN's R2026b image is available. Local combined-image
+checks pass for proxy/kernelspec registration and mounted-home support-package
+discovery. Local licensed MATLAB R2026b arithmetic, Symbolic Math, image resize,
+and ResNet-50 model loading also pass across recreated mounted-home containers.
+Final native combined-image publication is being verified. Earlier R2026a
+diagnostic images were never published or deployed.
 
 The default Julia environment is computed from the running Julia version:
 `/opt/julia/environments/v<major>.<minor>/`. Project and LocalPreferences are
@@ -181,6 +183,7 @@ Every image contains:
 /usr/local/share/hydra-jupyterhub/Project.toml
 /usr/local/share/hydra-jupyterhub/LocalPreferences.toml
 /usr/local/share/hydra-jupyterhub/Manifest.toml
+/usr/local/share/hydra-jupyterhub/base-image.txt
 /usr/local/share/hydra-jupyterhub/MATLAB-VersionInfo.xml
 ```
 

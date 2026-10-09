@@ -269,3 +269,17 @@ work as implementation progresses. Never mark unverified work complete.
   line's image reference in base-image.txt for metadata, so bot updates do not
   leave a duplicate metadata string stale. Restrict Docker updates to the Julia
   repository name as documented by GitHub (registry excluded from name).
+- R2026b is now published at
+  `sha256:5a12950f75c90345dcf73f26c856fbcd0bb8781e8b4c4fe5c793220fcbb7b882`.
+  Native combined build 37960361376 on fb1400b is running. Local R2026b pull
+  completed; build the layer and run licensed validation locally only.
+- Corrected Dependabot Docker run 37960372097 explicitly checks
+  jupyter/julia-notebook, queries Quay's Julia tags/digest, and reports current
+  latest julia-1.13.1/no update needed. Automation is now actually verified,
+  superseding the earlier empty-dependency run. Actions updater also passes.
+- Local R2026b layer over the actual tested full scientific notebook PASSED:
+  real startup hooks, system kernelspec/proxy, mounted-home behavior, licensed
+  arithmetic/Symbolic Math/image resize and actual ResNet-50 model loading.
+  Installed MATLAB version 26.2.0.3386108; 24 product/support-package catalog
+  entries. Two recreated containers share a disposable home; the token stays
+  read-only/local and is never passed to public CI or embedded in the image.
