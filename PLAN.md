@@ -10,6 +10,7 @@
   authorized read-only notebook diagnostics (kernel logs/specs) on 2026-10-09.
   This exception does not authorize restarting a pod or modifying user files.
 - Do not change existing Hydra configuration, workflows, secrets, or applications.
+- Inspect `ltpn/matlab-dockerfile` read-only; user will update it independently.
 - All implementation files belong to this new directory/repository.
 
 ## Initial evidence (2026-10-09)
@@ -55,6 +56,10 @@
 9. Preserve meaningful upstream software-version tag families using installed
    versions, and add Julia direct-dependency tags. Record the actual base digest.
 10. User confirmed public repository and image. Repository created successfully.
+11. User added MATLAB notebooks and browser-desktop integration through MathWorks
+    `jupyter-matlab-proxy`. Reuse LTPN's published MATLAB installation/toolboxes
+    rather than maintain another MPM product installation in this repository.
+    Target current MATLAB R2026b; no license credentials in the public image.
 
 ## Confirmed implementation decisions and observations
 
@@ -143,3 +148,57 @@ work as implementation progresses. Never mark unverified work complete.
   metadata and export metadata before smoke checks for failure diagnostics.
 - Superseded runs 37936384203/37937626463 cancelled before further compilation;
   the final source preserves normal IJulia project selection as the user agreed.
+
+## MATLAB integration (added 2026-10-09)
+
+- Current native notebook build: 37938254659, commit 00a06b5, still in progress.
+- Correct public MATLAB package is `ghcr.io/ltpn/matlab`, not the nested image
+  path in the reference repository's current workflow. R2026a resolves to digest
+  `sha256:73a28217a2f2fbe416a3d42d8336d8b75f0dc00696cab072c176b7b95b9f9803`.
+- R2026b is current according to MathWorks, but LTPN's R2026b tag is not available
+  yet. User will update the reference independently; never substitute R2026a
+  silently in the requested final image.
+- Reference main and upgrade-ci Dockerfiles/workflows default to MATLAB only.
+  Ask which extra products/image source contains LTPN additions. Copy the actual
+  complete `/opt/matlab` installation, preserving whatever toolboxes it contains.
+- Latest Julia base is Ubuntu 26.04. MathWorks' validated R2026b list includes
+  Ubuntu 24.04/22.04, not 26.04. However the official container-images repository
+  provides `matlab-deps/r2026b/ubuntu26.04/base-dependencies-amd64.txt`.
+  Use that concrete dependency list and test; describe validation limitation.
+- Dependency-list source commit: `99bc35ad91f417f5635af41262af2e92c4521df3`.
+- Prepare a separate MATLAB installation layer over the tested notebook image;
+  preserve upstream entrypoint/notebook uid/PVC conventions. Add Xvfb, system
+  kernelspec, and proxy package while constraining installed Python packages.
+- Record MATLAB release and image provenance in final runtime metadata/tags.
+  Structural checks can run without a license; licensed execution must not be
+  claimed from a kernelspec/import check. No Hydra deployment change authorized.
+- [ ] MATLAB integration layer built/tested with LTPN's R2026b installation.
+- User clarified the deep-learning variant. Confirmed the actual customized
+  Dockerfile is `alternates/building-on-matlab-docker-image/Dockerfile`; it uses
+  `mathworks/matlab-deep-learning` and adds Symbolic Math Toolbox and ResNet-50.
+  Its `from-matlab-docker-build-test.yml` publishes `ghcr.io/ltpn/matlab`, unlike
+  the main Dockerfile/workflow initially inspected. No product list input needed.
+- Published R2026a image history confirms the deep-learning products plus LTPN's
+  symbolic addition. Preserve support packages under their original absolute
+  `/home/matlab/Documents/MATLAB/SupportPackages` path, outside the notebook PVC,
+  as well as `/opt/MathWorks/ServiceHost` for MathWorks online licensing.
+- Local reference pull encountered unexpected EOF; retry once using cached layers.
+- User provided a local MATLAB batch token strictly for testing, with conditional
+  permission for GitHub only if no other org user could retrieve it. This cannot
+  be guaranteed for repository/workflow writers, so DO NOT upload any token to
+  GitHub. Keep it outside this repository and Docker build context. Licensed
+  validation is opt-in, in disposable local containers with a read-only mount,
+  captured output and explicit non-secret result markers only. No public CI
+  secret or deployment license configuration is added.
+- Local licensed R2026a source-image validation PASSED: arithmetic, Symbolic
+  Math, image resize, ResNet-50 entry point; `ver` confirms all 11 installed
+  products including MATLAB and Symbolic Math. This checks the existing source
+  installation, not the new combined Ubuntu 26.04 image. Token stayed local.
+- First batch expression used a multiline string and yielded no success marker.
+  Flattened it to a single-line statement as required by this launcher behavior;
+  explicit marker validation now prevents zero-exit false positives.
+- MATLAB release/products/support-package versions are parsed from actual
+  VersionInfo.xml and appdata/products catalogs. Add release/full-version tags
+  and source-image digest labels without guessing from the requested release.
+- Local unit tests, Python compilation, shell syntax, YAML parsing and diff
+  whitespace checks pass for the new layer; actual combined build is pending.

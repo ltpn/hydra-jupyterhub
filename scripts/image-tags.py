@@ -21,6 +21,10 @@ def derive(metadata, build_id):
         versions[tag] = metadata["python"]["packages"][package]
     for name, version in versions.items():
         tags.add(safe_tag(f"{name}-{version}"))
+    if metadata.get("matlab"):
+        versions["matlab"] = metadata["matlab"]["release"]
+        tags.add(safe_tag(f"matlab-{metadata['matlab']['release']}"))
+        tags.add(safe_tag(f"matlab-{metadata['matlab']['version']}"))
     tags.add(safe_tag("python-" + ".".join(versions["python"].split(".")[:2])))
     for name, version in metadata["julia"]["direct_packages"].items():
         if version:
@@ -38,6 +42,10 @@ def derive(metadata, build_id):
         "org.ltpn.hydra-jupyterhub.cuda.runtime": metadata["julia"]["cuda_runtime"],
         "org.ltpn.hydra-jupyterhub.software-versions": json.dumps(versions, sort_keys=True),
     }
+    if metadata.get("matlab"):
+        labels["org.ltpn.hydra-jupyterhub.matlab.source-image"] = metadata["matlab"]["source_image"]
+        labels["org.ltpn.hydra-jupyterhub.matlab.release"] = metadata["matlab"]["release"]
+        labels["org.ltpn.hydra-jupyterhub.matlab.version"] = metadata["matlab"]["version"]
     return sorted(tags), labels
 
 

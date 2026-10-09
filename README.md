@@ -19,6 +19,50 @@ It does not depend on, fetch files from, or deploy `nedoqs-tutorials`.
   functionality. The Project contains no version constraints.
 - CUDA runtime **and compiler** preferences at **12.9**, for Hydra's Pascal GPU.
   This toolchain choice is separate from Julia package version constraints.
+- MATLAB **R2026b**, copied from `ghcr.io/ltpn/matlab:R2026b`, including the
+  deep-learning image's toolboxes/support packages and LTPN's Symbolic Math
+  addition. `jupyter-matlab-proxy` supplies a MATLAB notebook kernel and the
+  **Open MATLAB** browser desktop. No license credentials are bundled.
+
+### MATLAB installation and licensing
+
+`Dockerfile.matlab` adds MATLAB to the independently tested Julia notebook layer.
+It copies the installation, support packages at their original absolute paths,
+and managed MathWorks Service Host. It preserves the notebook user and Jupyter
+entrypoint; it does not inherit the MATLAB container's VNC desktop or startup
+command. MATLAB kernelspecs live outside the persistent notebook home.
+
+The source is LTPN's
+[deep-learning variant](https://github.com/ltpn/matlab-dockerfile/blob/main/alternates/building-on-matlab-docker-image/Dockerfile),
+not the repository's main MATLAB-only Dockerfile. The source image's digest is
+resolved and recorded at build time, preserving the actual published installation.
+No second MPM product list is maintained here.
+
+Users license MATLAB through the integration's first-use dialog with their
+MathWorks account or a network license manager. An administrator can alternatively
+supply `MLM_LICENSE_FILE` at runtime; that would be a separate deployment change.
+See MathWorks' [licensing instructions](https://github.com/mathworks/matlab-proxy/blob/main/MATLAB-Licensing-Info.md).
+GitHub OAuth authenticates access to JupyterHub; it does not provide a MATLAB license.
+Local batch validation can use a read-only token mount at
+`/run/secrets/matlab-batch-token` with `tests/matlab_batch.py` in a disposable
+container. The test downloads MathWorks' batch licensing wrapper, checks MATLAB,
+Symbolic Math, image processing, and the ResNet-50 entry point, and prints only
+explicit result markers. It does not run in GitHub Actions. Repository/workflow
+writers could extract an Actions secret, so a personal batch token must remain
+local under the user's confidentiality requirement. Batch licensing does not
+replace the browser integration's interactive licensing flow.
+
+The latest Julia base uses Ubuntu 26.04. The vendored amd64 dependency list comes
+from [MathWorks container-images](https://github.com/mathworks-ref-arch/container-images/blob/99bc35ad91f417f5635af41262af2e92c4521df3/matlab-deps/r2026b/ubuntu26.04/base-dependencies-amd64.txt).
+MathWorks provides that dependency definition, but its
+[validated R2026b OS list](https://www.mathworks.com/support/requirements/matlab-linux.html)
+currently lists Ubuntu 24.04/22.04, not 26.04. Image checks do not establish
+official OS support or licensed MATLAB functionality.
+
+**Integration status:** R2026b is not yet published in LTPN's package at the time
+this layer was prepared. Full MATLAB build/testing remains pending that tag.
+An R2026a override can be used for exploratory checks; it must not be presented
+as the requested R2026b image.
 
 The default Julia environment is computed from the running Julia version:
 `/opt/julia/environments/v<major>.<minor>/`. Project and LocalPreferences are
@@ -56,6 +100,11 @@ The script always uses `--platform linux/amd64`, pulls the digest-pinned base,
 and disables install-layer caching so scheduled builds actually refresh Julia
 packages. Do not omit `--no-cache` when using `docker build` directly.
 An arm64 laptop needs amd64 emulation; CI uses native amd64 Ubuntu runners.
+The default build includes MATLAB and fails early if its source tag is missing.
+For an explicitly Julia-only diagnostic build, use
+`HYDRA_INCLUDE_MATLAB=0 bash scripts/build.sh`. This omits MATLAB and is not the
+full requested image. The MATLAB layer can also be tested against an already
+built notebook using `bash scripts/add-matlab.sh`.
 
 Before publication, the build runs:
 
@@ -69,11 +118,17 @@ Before publication, the build runs:
   is used only in disposable tests, not preinstalled in the published image.
 - CPU-only imports of CUDA, plotting, tensor, ODE, and notebook packages.
 - Architecture and metadata/tag checks.
+- MATLAB executable/discovery, proxy launcher, installed kernelspec, Service
+  Host/support-package locations, release metadata, and availability with a
+  mounted notebook home. These are license-free structural checks.
 
 These tests do **not** demonstrate GPU execution on the physical GTX 1070 Ti.
 GitHub-hosted runners have no NVIDIA GPU; the Hydra cluster is not accessed or
 changed by this repository's workflows. Test actual GPU computation separately
 before a deployment migration.
+Licensed MATLAB kernel execution and browser-desktop login require a MATLAB
+license and are not implied by the structural checks. CUDA 12.9 preferences
+apply to Julia; MATLAB retains its own release/toolbox runtime requirements.
 
 The upstream image also supplies its own `jupyterhub-singleuser` version.
 Current base metadata includes **JupyterHub 6.0.1**, whereas the previously
@@ -103,6 +158,10 @@ tags such as `julia-1.13.1`, `hub-6.0.1`, `lab-4.6.4`, `python-3.13.15`,
 `quantumtoolbox-<resolved-version>` and `cuda-<resolved-version>`.
 Those examples describe tag families; inspect metadata for exact package versions.
 `+` in a JLL build suffix is encoded as `_` to make a valid Docker tag.
+MATLAB-enabled builds also tag the actual installed release and full version,
+such as `matlab-R2026b`, and record the source MATLAB image digest in metadata.
+Their JSON metadata inventories installed MATLAB products and support packages
+from the installation's own product catalogs, including actual versions.
 
 `latest`, `amd64`, and software-version tags are moving aliases. The
 `build-<run-id>-<attempt>` and `sha-<commit>-<run-id>-<attempt>` tags identify the
@@ -116,6 +175,7 @@ Every image contains:
 /usr/local/share/hydra-jupyterhub/Project.toml
 /usr/local/share/hydra-jupyterhub/LocalPreferences.toml
 /usr/local/share/hydra-jupyterhub/Manifest.toml
+/usr/local/share/hydra-jupyterhub/MATLAB-VersionInfo.xml
 ```
 
 `versions.json` contains all resolved Julia packages/UUIDs/versions, flags direct
@@ -132,7 +192,7 @@ docker inspect ghcr.io/ltpn/hydra-jupyterhub:latest \
   --format '{{json .Config.Labels}}'
 ```
 
-The complete resolved environment is also uploaded as the
+`MATLAB-VersionInfo.xml` is present in MATLAB-enabled builds. The complete resolved environment is also uploaded as the
 `resolved-environment-amd64` Actions artifact. No credentials are required for
 CI: publication uses the repository-scoped `GITHUB_TOKEN`.
 
@@ -191,7 +251,8 @@ See [VSCODE-EVALUATION.md](VSCODE-EVALUATION.md) for the comparison and sources.
 - [IJulia troubleshooting](https://ijulia.org/stable/manual/troubleshooting/)
 - [Dependabot Docker tag comparison](https://github.com/dependabot/dependabot-core/blob/main/docker/lib/dependabot/docker/tag.rb)
 
-This repository's source is MIT-licensed; upstream software retains its own
-licenses. The reference Project/Docker conventions originated in LTPN's
+Original repository source is MIT-licensed; the copied MATLAB dependency list
+uses [MathWorks' reference architecture license](MATLAB-DEPS-LICENSE.md).
+MATLAB and upstream software retain their own licenses. The reference Project/Docker conventions originated in LTPN's
 MIT-licensed `nedoqs-tutorials`; that repository is not modified or used at build
 time. Implementation decisions and validation status are tracked in `PLAN.md`.

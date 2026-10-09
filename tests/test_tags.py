@@ -23,6 +23,12 @@ class TagsTest(unittest.TestCase):
             self.assertIn(tag, tags)
         self.assertEqual(labels["org.opencontainers.image.base.digest"], "sha256:" + "b" * 64)
         self.assertIn('"QuantumToolbox": "0.51.2"', labels["org.ltpn.hydra-jupyterhub.julia.direct-versions"])
+        metadata["matlab"] = {"release": "R2026b", "version": "26.2.0.1234567",
+                              "source_image": "ghcr.io/ltpn/matlab:R2026b"}
+        tags, labels = module.derive(metadata, "123-1")
+        self.assertIn("matlab-R2026b", tags)
+        self.assertIn("matlab-26.2.0.1234567", tags)
+        self.assertEqual(labels["org.ltpn.hydra-jupyterhub.matlab.release"], "R2026b")
 
     def test_rejects_overlong_tags(self):
         with self.assertRaises(ValueError):

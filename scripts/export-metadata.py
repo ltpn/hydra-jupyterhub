@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 import tomllib
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 ROOT = Path("/usr/local/share/hydra-jupyterhub")
@@ -48,6 +49,35 @@ metadata = {
     "os": os_info,
     "manifest_sha256": hashlib.sha256((ROOT / "Manifest.toml").read_bytes()).hexdigest(),
 }
+if os.environ.get("MATLAB_ROOT"):
+    matlab_root = Path(os.environ["MATLAB_ROOT"])
+    version_info = matlab_root / "VersionInfo.xml"
+    version_xml = ET.parse(version_info).getroot()
+    release = version_xml.findtext("release")
+    version = version_xml.findtext("version")
+    if not release or not version or matlab_root.name != release:
+        raise RuntimeError(f"Unexpected MATLAB VersionInfo.xml in {matlab_root}")
+    support_root = Path("/home/matlab/Documents/MATLAB/SupportPackages") / release
+    products = {}
+    for catalog in (matlab_root / "appdata/products", support_root / "appdata/products"):
+        for product_file in sorted(catalog.glob("*.xml")):
+            product_xml = ET.parse(product_file).getroot()
+            name = product_xml.findtext("productName")
+            product_version = product_xml.findtext("productVersion")
+            if name and product_version:
+                products[name] = {"version": product_version,
+                                  "type": product_xml.findtext("productType"),
+                                  "release": product_xml.findtext("releaseFamily")}
+    metadata["matlab"] = {
+        "release": release,
+        "version": version,
+        "root": str(matlab_root),
+        "source_image": os.environ["HYDRA_MATLAB_IMAGE"],
+        "support_packages_root": str(support_root),
+        "installed_products": products,
+        "license_bundled": False,
+    }
+    (ROOT / "MATLAB-VersionInfo.xml").write_bytes(version_info.read_bytes())
 (ROOT / "versions.json").write_text(json.dumps(metadata, indent=2, sort_keys=True) + "\n")
 print(json.dumps({"julia": julia["version"], "direct_packages": direct,
                   "manifest_sha256": metadata["manifest_sha256"]}, indent=2))

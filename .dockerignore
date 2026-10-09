@@ -1,5 +1,8 @@
 **
 !Dockerfile
+!Dockerfile.matlab
+!matlab-base-dependencies.txt
+!MATLAB-DEPS-LICENSE.md
 !Project.toml
 !LocalPreferences.toml
 !scripts/
