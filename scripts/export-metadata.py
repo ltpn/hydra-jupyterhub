@@ -38,7 +38,8 @@ for line in Path("/etc/os-release").read_text().splitlines():
         os_info[key.lower()] = value.strip('"')
 tools = {}
 for name, command in {"code-server": ["code-server", "--version"],
-                      "conda": ["conda", "--version"], "mamba": ["mamba", "--version"]}.items():
+                      "conda": ["conda", "--version"], "mamba": ["mamba", "--version"],
+                      "btop": ["btop", "--version"]}.items():
     tools[name] = parse_tool_version(subprocess.check_output(command, text=True, stderr=subprocess.PIPE))
 base_record = ROOT / "base-image.txt"
 base_image = base_record.read_text().strip() if base_record.is_file() else os.environ["HYDRA_BASE_IMAGE"]

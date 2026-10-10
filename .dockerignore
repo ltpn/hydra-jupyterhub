@@ -8,4 +8,5 @@
 !scripts/install-julia.jl
 !scripts/export-metadata.py
 !scripts/runtime_versions.py
+!scripts/configure-vscode-launcher.py
 !scripts/matlab-support-packages.sh

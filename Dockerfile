@@ -8,12 +8,14 @@ ARG MATLAB_RELEASE=R2026a
 ARG MATLAB_PLATFORM=linux/amd64
 FROM --platform=${MATLAB_PLATFORM} ${MATLAB_IMAGE} AS matlab_installation
 ARG MATLAB_RELEASE
+# Disable Go GC only for mpm when building under amd64 emulation on Apple Silicon.
+ARG MPM_GOGC=100
 USER root
 WORKDIR /tmp
 # Add the toolbox to the existing LTPN MATLAB installation; no license is baked in.
 RUN wget -q https://www.mathworks.com/mpm/glnxa64/mpm -O /tmp/mpm \
     && chmod +x /tmp/mpm \
-    && HOME=/home/matlab /tmp/mpm install --release="${MATLAB_RELEASE}" \
+    && GOGC=${MPM_GOGC} HOME=/home/matlab /tmp/mpm install --release="${MATLAB_RELEASE}" \
        --destination="/opt/matlab/${MATLAB_RELEASE}" --products=Curve_Fitting_Toolbox \
     && rm -f /tmp/mpm /tmp/mathworks_root.log
 FROM quay.io/jupyter/julia-notebook:julia-1.13.1@sha256:930f69277b2589b3dd671d1b4c1a0b554a811388b3400c7bfca6c6d5986f48dd
@@ -52,7 +54,7 @@ RUN test -x "${MATLAB_ROOT}/bin/matlab" \
     && rm -rf /var/lib/apt/lists/* /tmp/matlab-base-dependencies.txt \
     && ln -s "${MATLAB_ROOT}/bin/matlab" /usr/local/bin/matlab
 COPY Dockerfile Project.toml LocalPreferences.toml /opt/hydra-build/
-COPY scripts/install-julia.jl scripts/export-metadata.py scripts/runtime_versions.py /opt/hydra-build/
+COPY scripts/install-julia.jl scripts/export-metadata.py scripts/runtime_versions.py scripts/configure-vscode-launcher.py /opt/hydra-build/
 RUN chown -R "${NB_UID}:${NB_GID}" /opt/hydra-build \
     && mkdir -p /usr/local/share/hydra-jupyterhub \
     && chown "${NB_UID}:${NB_GID}" /usr/local/share/hydra-jupyterhub \
@@ -60,7 +62,7 @@ RUN chown -R "${NB_UID}:${NB_GID}" /opt/hydra-build \
 
 USER ${NB_UID}
 # Preserve the upstream Python stack while adding editor and MATLAB integration.
-RUN mamba install --yes --freeze-installed jupyter-vscode-proxy code-server \
+RUN mamba install --yes --freeze-installed jupyter-vscode-proxy code-server btop \
     && mamba clean --all --yes \
     && fix-permissions "${CONDA_DIR}"
 RUN python -c 'import importlib.metadata as m; from pathlib import Path; Path("/tmp/hydra-python-constraints.txt").write_text("\n".join(d.metadata["Name"]+"=="+d.version for d in m.distributions() if d.metadata["Name"]))' \
@@ -70,9 +72,13 @@ RUN python -c 'import importlib.metadata as m; from pathlib import Path; Path("/
     && rm /tmp/hydra-python-constraints.txt \
     && fix-permissions "${CONDA_DIR}"
 RUN JULIA_NUM_PRECOMPILE_TASKS=2 julia --threads=2 --startup-file=no /opt/hydra-build/install-julia.jl \
-    && fix-permissions "${JULIA_PKGDIR}" "${CONDA_DIR}/share/jupyter" \
-    && python /opt/hydra-build/export-metadata.py
+    && fix-permissions "${JULIA_PKGDIR}" "${CONDA_DIR}/share/jupyter"
 
+USER root
+# Download the icon at build time: HEAD, then the pinned commit, then plugin default.
+RUN python /opt/hydra-build/configure-vscode-launcher.py
+USER ${NB_UID}
+RUN python /opt/hydra-build/export-metadata.py
 USER root
 RUN rm -rf /opt/hydra-build
 USER ${NB_UID}

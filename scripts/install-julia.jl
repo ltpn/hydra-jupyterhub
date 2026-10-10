@@ -33,9 +33,8 @@ for name in readdir(kernels_dir)
         rm(specdir; recursive=true)
     end
 end
-IJulia.installkernel("Julia Hydra", "--project=@.";
-    julia=Cmd(["/usr/local/bin/julia"]), specname="julia-hydra",
-    displayname="Julia $(VERSION) (Hydra)")
+IJulia.installkernel("Julia", "--project=@.";
+    julia=Cmd(["/usr/local/bin/julia"]), specname="julia-hydra")
 
 # These are the precise inputs/results for this image; do not commit a Manifest.
 metadata_dir = "/usr/local/share/hydra-jupyterhub"

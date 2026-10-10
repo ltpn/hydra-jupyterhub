@@ -53,6 +53,21 @@ assert "--project=@." in spec.argv, spec.argv
 assert spec.resource_dir.startswith("/opt/conda/share/jupyter/kernels/"), spec.resource_dir
 assert not Path("/opt/conda/envs/Qiskit").exists()
 assert os.environ["CODE_EXTENSIONSDIR"] == "/home/jovyan/.local/share/code-server/extensions"
+# Customize the registered plugin, without adding a duplicate proxy process.
+import importlib.metadata
+from traitlets.config.loader import PyFileConfigLoader
+from jupyter_server_proxy.config import ServerProxy
+config = PyFileConfigLoader("jupyter_server_config.py", path=os.environ["CONDA_DIR"] + "/etc/jupyter").load_config()
+assert "vscode" not in ServerProxy(config=config).servers
+entry = [e for e in importlib.metadata.entry_points(group="jupyter_serverproxy_servers") if e.name == "vscode"]
+assert len(entry) == 1
+launcher = entry[0].load()()["launcher_entry"]
+assert launcher["title"] == "VS Code", launcher
+assert Path(launcher["icon_path"]).is_file()
+icon = Path("/usr/local/share/hydra-jupyterhub/vscode-icon.svg")
+if icon.exists():
+    assert Path(launcher["icon_path"]) == icon
+
 # Explicit proxy argument overrides conda's nonpersistent extensions default.
 import jupyter_vscode_proxy
 command = jupyter_vscode_proxy.setup_vscode()["command"]

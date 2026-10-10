@@ -16,6 +16,7 @@ matlab_snapshot="${matlab_image%@*}@${matlab_digest}"
 docker build --builder "$daemon_builder" --platform linux/amd64 --pull --no-cache \
   --build-arg SOURCE_REVISION="$revision" --build-arg BUILD_DATE="$created" \
   --build-arg MATLAB_IMAGE="$matlab_snapshot" --build-arg MATLAB_RELEASE="$matlab_release" \
+  --build-arg MPM_GOGC="${MPM_GOGC:-100}" \
   -t hydra-jupyterhub:build .
 
 # Export before smoke tests so failed builds retain useful resolution evidence.

@@ -15,5 +15,6 @@ class RuntimeVersionTest(unittest.TestCase):
     def test_other_tools_and_missing_version(self):
         self.assertEqual(module.parse_tool_version("conda 26.9.1\n"), "26.9.1")
         self.assertEqual(module.parse_tool_version("2.8.1\n"), "2.8.1")
+        self.assertEqual(module.parse_tool_version("\x1b[1mbtop version: \x1b[0m1.4.6\n"), "1.4.6")
         with self.assertRaises(ValueError):
             module.parse_tool_version("[2026-10-09] initializing\n")
