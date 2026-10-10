@@ -73,8 +73,6 @@ For Apple Silicon builds, use `MPM_GOGC=off bash scripts/build.sh` to avoid a
 Go garbage-collector error in the emulated MATLAB installer.
 
 `btop` is available in terminals.
-The VS Code launcher icon is downloaded from GitHub during builds, with a pinned
-fallback and then the plugin default if neither download works.
 
 Select the **Julia** kernel in JupyterLab. Its default environment is
 `/opt/julia/environments/v<major>.<minor>`. A notebook inside another Julia
