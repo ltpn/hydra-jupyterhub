@@ -12,9 +12,10 @@ import jupyter_matlab_proxy
 root = Path(os.environ["MATLAB_ROOT"])
 metadata = json.loads(Path("/usr/local/share/hydra-jupyterhub/versions.json").read_text())
 assert metadata["matlab"]["release"] == root.name
+assert root.name == "R2026a", "Hydra's Pascal GPU requires MATLAB R2026a"
 assert metadata["matlab"]["version"]
 products = metadata["matlab"]["installed_products"]
-for product in ("MATLAB", "Symbolic Math Toolbox", "Deep Learning Toolbox",
+for product in ("MATLAB", "Symbolic Math Toolbox", "Curve Fitting Toolbox", "Deep Learning Toolbox",
                 "Parallel Computing Toolbox", "Deep Learning Toolbox Model for ResNet-50 Network"):
     assert product in products, product
 assert metadata["python"]["packages"].get("jupyter-matlab-proxy")

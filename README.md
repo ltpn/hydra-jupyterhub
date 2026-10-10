@@ -3,7 +3,8 @@
 `ghcr.io/ltpn/hydra-jupyterhub:latest` — Linux **amd64**.
 
 JupyterLab with the default Python stack, Julia, VS Code/code-server, Pluto,
-and MATLAB R2026b with LTPN's deep-learning and Symbolic Math toolboxes.
+and MATLAB R2026a with LTPN's deep-learning, Symbolic Math, and Curve Fitting toolboxes.
+MATLAB stays on R2026a because R2026b dropped support for Hydra's Pascal GPU.
 Julia packages are listed in [Project.toml](Project.toml); CUDA runtime and
 compiler preferences are **12.9**.
 

@@ -1,11 +1,24 @@
 # syntax=docker/dockerfile:1
 # Dependabot tracks stable Julia-prefixed tags and the corresponding base digest.
-ARG MATLAB_IMAGE=ghcr.io/ltpn/matlab:R2026b
+# Keep R2026a for Hydra's GTX 1070 Ti (Pascal, compute capability 6.1).
+# R2026b requires compute capability >= 7.5; R2026a still supports Pascal.
+# https://www.mathworks.com/help/releases/R2026a/parallel-computing/gpu-computing-requirements.html
+ARG MATLAB_IMAGE=ghcr.io/ltpn/matlab:R2026a
+ARG MATLAB_RELEASE=R2026a
 ARG MATLAB_PLATFORM=linux/amd64
 FROM --platform=${MATLAB_PLATFORM} ${MATLAB_IMAGE} AS matlab_installation
+ARG MATLAB_RELEASE
+USER root
+WORKDIR /tmp
+# Add the toolbox to the existing LTPN MATLAB installation; no license is baked in.
+RUN wget -q https://www.mathworks.com/mpm/glnxa64/mpm -O /tmp/mpm \
+    && chmod +x /tmp/mpm \
+    && HOME=/home/matlab /tmp/mpm install --release="${MATLAB_RELEASE}" \
+       --destination="/opt/matlab/${MATLAB_RELEASE}" --products=Curve_Fitting_Toolbox \
+    && rm -f /tmp/mpm /tmp/mathworks_root.log
 FROM quay.io/jupyter/julia-notebook:julia-1.13.1@sha256:930f69277b2589b3dd671d1b4c1a0b554a811388b3400c7bfca6c6d5986f48dd
 ARG MATLAB_IMAGE
-ARG MATLAB_RELEASE=R2026b
+ARG MATLAB_RELEASE
 ARG TARGETARCH
 ARG SOURCE_REVISION=local
 ARG BUILD_DATE=unknown

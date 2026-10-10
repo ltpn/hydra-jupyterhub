@@ -25,6 +25,9 @@ with tempfile.TemporaryDirectory(prefix="hydra-matlab-batch-") as directory:
         fprintf('HYDRA_MATLAB_STAGE arithmetic\\n');
         assert(double(sym(1)+sym(1))==2);
         fprintf('HYDRA_MATLAB_STAGE symbolic\\n');
+        x=(1:5)'; f=fit(x,2*x+1,'poly1');
+        assert(max(abs(coeffvalues(f)-[2 1]))<1e-10);
+        fprintf('HYDRA_MATLAB_STAGE curve_fitting\\n');
         assert(isequal(size(imresize(ones(4),2)),[8 8]));
         fprintf('HYDRA_MATLAB_STAGE image_resize\\n');
         assert(exist('resnet50','file')==2);
