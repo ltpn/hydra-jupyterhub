@@ -1,5 +1,6 @@
 """Download Microsoft's icon with fallbacks and configure the existing proxy."""
 import os
+import subprocess
 import urllib.error
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -20,9 +21,17 @@ def fetch(url):
     return data
 
 
+def render_png(svg, png):
+    subprocess.run([
+        "rsvg-convert", "--width", "512", "--height", "512",
+        "--output", str(png), str(svg),
+    ], check=True)
+
+
 def download_icon(directory, get=fetch):
     directory.mkdir(parents=True, exist_ok=True)
-    icon = directory / "vscode-icon.svg"
+    svg_icon = directory / "vscode-icon.svg"
+    icon = directory / "vscode-icon.png"
     license_file = directory / "VSCODE-ICON-LICENSE.txt"
     source_file = directory / "vscode-icon-source.txt"
     for ref in REFS:
@@ -39,13 +48,20 @@ def download_icon(directory, get=fetch):
                 error.close()
             print(f"VS Code icon unavailable at {ref}: {type(error).__name__}")
             continue
-        icon.write_bytes(data)
+        # Optional flatter artwork: remove the SVG's shadow filters.
+        # Disabled: PNG rendering avoids Safari's SVG blur while keeping the original artwork.
+        # svg = ET.fromstring(data)
+        # for element in svg.iter():
+        #     element.attrib.pop("filter", None)
+        # data = ET.tostring(svg, encoding="utf-8")
+        svg_icon.write_bytes(data)
+        render_png(svg_icon, icon)
         license_file.write_bytes(license_data)
         source_file.write_text(source + "\n")
         print(f"VS Code icon downloaded: {source}")
         return icon
     # Only our generated files are removed; the plugin's original SVG is untouched.
-    for path in (icon, license_file, source_file):
+    for path in (svg_icon, icon, license_file, source_file):
         path.unlink(missing_ok=True)
     print("Using the plugin's default VS Code icon")
     return None

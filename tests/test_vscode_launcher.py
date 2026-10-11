@@ -13,9 +13,16 @@ launcher = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(launcher)
 SVG = b'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"></svg>'
 LICENSE = b"MIT License\nCopyright Microsoft Corporation\nPermission notice\n"
+PNG = b"\x89PNG\r\n\x1a\n"
 
 
 class IconFallbackTest(unittest.TestCase):
+    def setUp(self):
+        # Unit tests exercise download/configuration independently of the build-only converter.
+        converter = patch.object(launcher, "render_png", side_effect=lambda svg, png: png.write_bytes(PNG))
+        converter.start()
+        self.addCleanup(converter.stop)
+
     def test_head_preferred_and_license_retained(self):
         calls = []
         def fetch(url):
@@ -24,7 +31,9 @@ class IconFallbackTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             icon = launcher.download_icon(root, fetch)
-            self.assertEqual(icon.read_bytes(), SVG)
+            self.assertEqual(icon.name, "vscode-icon.png")
+            self.assertEqual(icon.read_bytes(), PNG)
+            self.assertEqual((root / "vscode-icon.svg").read_bytes(), SVG)
             self.assertEqual((root / "VSCODE-ICON-LICENSE.txt").read_bytes(), LICENSE)
         self.assertEqual(len(calls), 2)
         self.assertTrue(all("/HEAD/" in url for url in calls))
@@ -51,8 +60,10 @@ class IconFallbackTest(unittest.TestCase):
                 root = Path(directory)
                 # A previous preview must not leave a stale override behind.
                 (root / "vscode-icon.svg").write_bytes(SVG)
+                (root / "vscode-icon.png").write_bytes(PNG)
                 self.assertIsNone(launcher.download_icon(root, fetch))
                 self.assertFalse((root / "vscode-icon.svg").exists())
+                self.assertFalse((root / "vscode-icon.png").exists())
                 config = root / "jupyter_server_config.py"
                 launcher.configure(config, None)
                 self.assertIn("VS Code", config.read_text())

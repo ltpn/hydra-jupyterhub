@@ -64,7 +64,7 @@ assert len(entry) == 1
 launcher = entry[0].load()()["launcher_entry"]
 assert launcher["title"] == "VS Code", launcher
 assert Path(launcher["icon_path"]).is_file()
-icon = Path("/usr/local/share/hydra-jupyterhub/vscode-icon.svg")
+icon = Path("/usr/local/share/hydra-jupyterhub/vscode-icon.png")
 if icon.exists():
     assert Path(launcher["icon_path"]) == icon
 

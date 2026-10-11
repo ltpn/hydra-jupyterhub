@@ -77,7 +77,12 @@ RUN JULIA_NUM_PRECOMPILE_TASKS=2 julia --threads=2 --startup-file=no /opt/hydra-
 
 USER root
 # Download the icon at build time: HEAD, then the pinned commit, then plugin default.
-RUN python /opt/hydra-build/configure-vscode-launcher.py
+# Render a high-resolution PNG for Safari; the converter is only needed during the build.
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends librsvg2-bin \
+    && python /opt/hydra-build/configure-vscode-launcher.py \
+    && apt-get purge --yes librsvg2-bin \
+    && rm -rf /var/lib/apt/lists/*
 USER ${NB_UID}
 RUN python /opt/hydra-build/export-metadata.py
 USER root
