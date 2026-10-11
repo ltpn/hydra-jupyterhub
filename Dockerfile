@@ -46,6 +46,7 @@ COPY --from=matlab_installation /home/matlab/Documents/MATLAB/SupportPackages/ /
 COPY --from=matlab_installation /opt/MathWorks/ServiceHost/ /opt/MathWorks/ServiceHost/
 COPY MATLAB-DEPS-LICENSE.md /usr/local/share/hydra-jupyterhub/MATLAB-DEPS-LICENSE.md
 COPY matlab-base-dependencies.txt /tmp/matlab-base-dependencies.txt
+COPY scripts/reset-matlab-proxy-registry.py /usr/local/bin/reset-matlab-proxy-registry.py
 COPY scripts/matlab-support-packages.sh /usr/local/bin/before-notebook.d/20-matlab-support-packages.sh
 RUN test -x "${MATLAB_ROOT}/bin/matlab" \
     && apt-get update \

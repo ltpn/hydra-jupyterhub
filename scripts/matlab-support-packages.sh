@@ -3,6 +3,8 @@
 # variables in a subshell, and initialize the mounted home as the notebook user.
 (
   set -euo pipefail
+  # Reset only transient proxy-manager records; preserve cached licensing.
+  python /usr/local/bin/reset-matlab-proxy-registry.py
   release="${MATLAB_ROOT##*/}"
   bundled_root="/home/matlab/Documents/MATLAB/SupportPackages/$release"
   user_parent="${HOME}/Documents/MATLAB/SupportPackages"
