@@ -62,7 +62,8 @@ RUN chown -R "${NB_UID}:${NB_GID}" /opt/hydra-build \
 
 USER ${NB_UID}
 # Preserve the upstream Python stack while adding editor and MATLAB integration.
-RUN mamba install --yes --freeze-installed jupyter-vscode-proxy code-server btop \
+RUN mamba install --yes --freeze-installed jupyter-vscode-proxy code-server btop nbgitpuller \
+    && jupyter server extension enable --sys-prefix nbgitpuller \
     && mamba clean --all --yes \
     && fix-permissions "${CONDA_DIR}"
 RUN python -c 'import importlib.metadata as m; from pathlib import Path; Path("/tmp/hydra-python-constraints.txt").write_text("\n".join(d.metadata["Name"]+"=="+d.version for d in m.distributions() if d.metadata["Name"]))' \
