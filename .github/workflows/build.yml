@@ -7,7 +7,7 @@ on:
     branches: [main]
   workflow_dispatch:
   schedule:
-    - cron: '37 5 * * 2'
+    - cron: '37 2 * * 2'
 concurrency:
   group: image-${{ github.ref }}
   cancel-in-progress: false
