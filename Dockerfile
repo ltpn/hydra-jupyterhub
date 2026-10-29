@@ -18,7 +18,7 @@ RUN wget -q https://www.mathworks.com/mpm/glnxa64/mpm -O /tmp/mpm \
     && GOGC=${MPM_GOGC} HOME=/home/matlab /tmp/mpm install --release="${MATLAB_RELEASE}" \
        --destination="/opt/matlab/${MATLAB_RELEASE}" --products=Curve_Fitting_Toolbox \
     && rm -f /tmp/mpm /tmp/mathworks_root.log
-FROM quay.io/jupyter/julia-notebook:julia-1.13.2@sha256:10f03a1155b2bf1a3a525727e30d09e682927d43554352d77f1d570be126d330
+FROM quay.io/jupyter/julia-notebook:julia-1.13.3@sha256:a27e76feec1a48bc9626073299d8f0fd4ec43e808f33a933f8f23c112fa28582
 ARG MATLAB_IMAGE
 ARG MATLAB_RELEASE
 ARG TARGETARCH
